@@ -23,14 +23,33 @@
 #            docker images day12-chat:prod     # xem dung lượng
 # ═══════════════════════════════════════════════════════════════════
 
-FROM python:3.11
+FROM redis:7-alpine AS builder
+
+WORKDIR /build
+
+COPY requirements.txt .
+RUN apk add --no-cache python3 py3-pip \
+	&& pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+FROM redis:7-alpine
 
 WORKDIR /app
 
-COPY . .
+RUN apk add --no-cache python3
 
-RUN pip install -r requirements.txt
+ENV PYTHONPATH=/usr/local/lib/python3.12/site-packages
+
+COPY --from=builder /install /usr/local
+COPY app/ app/
+COPY utils/ utils/
+
+RUN adduser -D -H appuser
+
+USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+	CMD python -c "import os, urllib.request; port = os.getenv('PORT', '8000'); urllib.request.urlopen(f'http://127.0.0.1:{port}/healthz', timeout=3)"
+
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

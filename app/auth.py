@@ -24,6 +24,7 @@ SCHEME = "Bearer"
 
 
 def verify_bearer_token(
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
     authorization: str | None = Header(default=None),
     x_client_id: str | None = Header(default=None),
 ) -> str:
@@ -56,4 +57,24 @@ def verify_bearer_token(
          ``ANONYMOUS_CLIENT``. client_id này là đơn vị để rate limit và tính
          chi phí.
     """
-    raise NotImplementedError("TODO (CP3): cài đặt verify_bearer_token")
+    expected = get_settings().api_token
+
+    token = x_api_key
+    if token is None and authorization is not None:
+        scheme, _, value = authorization.partition(" ")
+        if scheme.lower() != SCHEME.lower() or not value:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="invalid or missing bearer token",
+                headers={"WWW-Authenticate": SCHEME},
+            )
+        token = value
+
+    if token is None or not secrets.compare_digest(token, expected):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid or missing bearer token",
+            headers={"WWW-Authenticate": SCHEME},
+        )
+
+    return x_client_id or ANONYMOUS_CLIENT

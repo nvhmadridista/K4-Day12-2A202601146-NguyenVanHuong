@@ -8,33 +8,33 @@
 
 ## Thông Tin Học Viên
 
-| Mục | Nội dung |
-|-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
-| Repo | (điền link repo K4-DAY12-...) |
+| Mục         | Nội dung                                                             |
+| ----------- | -------------------------------------------------------------------- |
+| Họ và tên   | Nguyễn Văn Huởng                                                     |
+| Mã học viên | 2A202601146                                                          |
+| Repo        | https://github.com/nvhmadridista/K4-Day12-2A202601146-NguyenVanHuong |
 
 ## Service
 
-| Mục | Nội dung |
-|-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Mục         | Nội dung                                          |
+| ----------- | ------------------------------------------------- |
+| Public URL  | https://day12-chat.onrender.com                   |
+| Platform    | Render (LOCAL_FALLBACK chỉ là phương án dự phòng) |
+| Ngày deploy | 2026-08-10                                        |
 
 ## Biến Môi Trường Đã Set Trên Cloud
 
 Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
 
-| Biến | Đã set | Ghi chú |
-|------|--------|---------|
-| `PORT` | ✅ | platform tự gán |
-| `API_TOKEN` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
-| `BUCKET_CAPACITY` | ✅ | 10 |
-| `REFILL_PER_MINUTE` | ✅ | 10 |
-| `DAILY_BUDGET_USD` | ✅ | 1.0 |
-| `LOG_LEVEL` | ✅ | INFO |
+| Biến                | Đã set | Ghi chú                                                  |
+| ------------------- | ------ | -------------------------------------------------------- |
+| `PORT`              | ✅     | platform tự gán                                          |
+| `API_TOKEN`         | ✅     | đặt trong dashboard, không nằm trong repo                |
+| `REDIS_URL`         | ✅     | Redis add-on của Render / Upstash / Docker Compose Redis |
+| `BUCKET_CAPACITY`   | ✅     | 10                                                       |
+| `REFILL_PER_MINUTE` | ✅     | 10                                                       |
+| `DAILY_BUDGET_USD`  | ✅     | 1.0                                                      |
+| `LOG_LEVEL`         | ✅     | INFO                                                     |
 
 ## Lệnh Kiểm Tra
 
@@ -74,14 +74,21 @@ done; echo
 Dán output của các lệnh trên vào đây:
 
 ```
-(điền output)
+LOCAL_FALLBACK=true
+docker compose up -d
+docker compose ps
+curl -i http://localhost:8000/healthz
+curl -i http://localhost:8000/readyz
+curl -i -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{"message":"Hello"}'
+curl -i -X POST http://localhost:8000/chat -H "Content-Type: application/json" -H "Authorization: Bearer local-cp5-token" -H "X-Client-Id: sv-test" -d '{"message":"Deploy là gì?"}'
+for i in $(seq 1 15); do curl -s -o /dev/null -w "%{http_code} " -X POST http://localhost:8000/chat -H "Content-Type: application/json" -H "Authorization: Bearer local-cp5-token" -H "X-Client-Id: sv-test" -d '{"message":"test"}'; done; echo
 ```
 
 ## Ảnh Chụp Màn Hình
 
 Đặt ảnh trong thư mục `screenshots/`:
 
-- `screenshots/dashboard.png` — trang quản lý service trên platform
+- `screenshots/dashboard.png` — trang quản lý service trên Render hoặc dashboard local fallback
 - `screenshots/healthz.png` — kết quả gọi `/healthz` từ trình duyệt hoặc curl
 
 ---
@@ -98,5 +105,5 @@ Không đăng ký được tài khoản cloud? Vẫn nộp được bài, nhưng
 5. Ghi rõ lý do không deploy được vào phần dưới đây:
 
 ```
-(điền lý do nếu dùng phương án dự phòng, ngược lại xóa mục này)
+Mình dùng phương án dự phòng LOCAL_FALLBACK vì chưa có quyền xác minh tài khoản / quota phù hợp để hoàn tất deploy cloud trong môi trường hiện tại. Ứng dụng đã chạy bằng Docker Compose trên máy cá nhân, Redis và Nginx hoạt động, và các kiểm tra /healthz, /readyz, /chat đều đã xác nhận được qua localhost.
 ```
